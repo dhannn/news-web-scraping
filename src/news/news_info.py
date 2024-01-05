@@ -15,7 +15,7 @@ class NewsInfo:
         self.byline = byline
         self.section = section
         self.content = content
-        self.word_count = len(content.split(' '))
+        self.word_count = len(' '.join(content))
 
     def save(self, save: Saver):
         save.save()

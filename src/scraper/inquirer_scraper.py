@@ -1,3 +1,4 @@
+from news.news_df import NewsDataFrame
 from news.news_info import NewsInfo
 from scraper.scraper import Scraper
 
@@ -11,7 +12,7 @@ class InquirerScraper(Scraper):
         'globalnation',
         'business',
         'lifestyle',
-        'enterntainment',
+        'entertainment',
         'technology',
         'sports',
         'opinion'
@@ -20,6 +21,9 @@ class InquirerScraper(Scraper):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     articles = []
+
+    def __init__(self, df: NewsDataFrame):
+        self.df = df
 
     def get_results_from_search(self, url: str) -> ResultSet[any]:
         
@@ -51,7 +55,7 @@ class InquirerScraper(Scraper):
         article_plat = page.find('div', id='art_plat').text.split('/')
         article_published = article_plat[len(article_plat) - 1].strip()
 
-        article_content = page.find('div', id='article_content').getText()
+        article_content = [p.text for p in page.find('div', id='article_content').find_all('p') ]
 
         article_section = section
 
@@ -64,22 +68,23 @@ class InquirerScraper(Scraper):
 
     def scrape(self) -> list[NewsInfo]:
         for section in self.SECTIONS:
-            for i in range(100):
-                url = self.BASE_URL.format(section, i)
+            for i in range(50):
+                url = self.BASE_URL.format(section, i + 1)
                 results = self.get_results_from_search(url)
 
                 print('Fetching from URL {}'.format(url))
                 
-                for result in results:
+                for i, result in enumerate(results):
                     result_page = self.get_result_page(result)                    
+                    print(f'\tScraping data from { result_page.url }')
+
                     news_info = self.extract_news_info(result_page, section)
                     self.articles.append(news_info)
 
                     if (news_info is None):
-                        with open('../log/err_{}.txt'.format(result))as file:
-                            file.write(result)
+                        with open('./log/{}.txt'.format('err'), 'a') as file:
+                            file.write(result.text)
+                        continue
 
-                    print(news_info.headline)
-                    print(news_info.byline, '\n\n')
-
+                    self.df.add_news('Inquirer', news_info)
                 
