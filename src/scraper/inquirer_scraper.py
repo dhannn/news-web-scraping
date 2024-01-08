@@ -17,18 +17,15 @@ class InquirerScraper(Scraper):
         'sports',
         'opinion'
     ]
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-    articles = []
 
-    def __init__(self, df: NewsDataFrame):
-        self.df = df
-
-    def get_results_from_search(self, url: str) -> ResultSet[any]:
+    def get_results_from_search(self, url: str, section) -> ResultSet[any]:
         
-        results_html = requests.get(url, headers=self.HEADERS).text
-        soup = BeautifulSoup(results_html, 'html.parser')
+        results_html = requests.get(url, headers=self.HEADERS)
+        
+        if results_html.url == 'https://{}.inquirer.net'.format(section):
+            return None
+
+        soup = BeautifulSoup(results_html.text, 'html.parser')
         
         return soup.find_all('div', id='ch-ls-head')
     
@@ -68,9 +65,12 @@ class InquirerScraper(Scraper):
 
     def scrape(self) -> list[NewsInfo]:
         for section in self.SECTIONS:
-            for i in range(50):
+            for i in range(80):
                 url = self.BASE_URL.format(section, i + 1)
-                results = self.get_results_from_search(url)
+                results = self.get_results_from_search(url, section)
+
+                if results is None:
+                    break
 
                 print('Fetching from URL {}'.format(url))
                 

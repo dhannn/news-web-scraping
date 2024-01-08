@@ -21,7 +21,7 @@ class NewsDataFrame:
         count = self.source_count[prefix]
         count += 1
 
-        ctrl_num = '{}-{:06d}'.format(prefix, count)
+        ctrl_num = '{}-{:05d}'.format(prefix, count)
 
         self.df.loc[ctrl_num] = [
             news_info.headline, 
@@ -36,3 +36,4 @@ class NewsDataFrame:
     
     def save(self):
         self.df.to_csv('./data/news_info.csv')
+        self.df.to_json('./data/news_info.json')
