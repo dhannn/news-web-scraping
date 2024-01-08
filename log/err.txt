@@ -694,3 +694,4 @@ November 25, 2014
 Latest Opinion
 Still on eco-suicide mode
 January 15, 2013 
+'NoneType' object has no attribute 'text''NoneType' object has no attribute 'text''NoneType' object has no attribute 'text''NoneType' object has no attribute 'text''NoneType' object has no attribute 'text''NoneType' object has no attribute 'text''NoneType' object has no attribute 'text''NoneType' object has no attribute 'text''NoneType' object has no attribute 'text'

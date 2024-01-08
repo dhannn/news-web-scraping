@@ -6,11 +6,14 @@ from news.news_info import NewsInfo
 class NewsDataFrame:
     df = None
     source_count = {
-        'INQ': 0
+        'INQ': 0,
+        'MAT': 0
     }
 
     SOURCE_TO_PREFIX = {
-        'Inquirer': 'INQ'
+        'Inquirer': 'INQ',
+        'Manila Times': 'MAT',
+        'Manila Bulletin': 'MAB'
     }
 
     def __init__(self):
