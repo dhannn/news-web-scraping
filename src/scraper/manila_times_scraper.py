@@ -1,7 +1,12 @@
+from telnetlib import EC
 from bs4 import BeautifulSoup
 import requests
 from news.news_info import NewsInfo
 from scraper.scraper import Scraper
+from selenium.webdriver.support import expected_conditions as EC
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
 
 
 class ManilaTimesScraper(Scraper):
@@ -9,34 +14,44 @@ class ManilaTimesScraper(Scraper):
     ARTICLE_SET = set()
     
     def scrape(self):
-        for i in range(9):
+        login_url = 'https://www.manilatimes.net/premium'
+        driver = webdriver.Chrome()
+        driver.get(login_url)
+
+        signin = driver.find_element(By.ID, "signInButton")
+        WebDriverWait(driver, timeout=1000, poll_frequency=1).until(EC.staleness_of(signin))
+
+        driver.implicitly_wait(2)
+
+        for i in range(1):
             url = self.BASE_URL.format(i + 1)
-            response = requests.get(url, headers=self.HEADERS)
+            driver.get(url)
+
             print(f'Fetching results from {url}')
 
-            result_urls = map(lambda x: x['href'], self.get_results(response))
+            result_urls = map(lambda x: x['href'], self.get_results(driver.page_source))
             for result_url in result_urls:
                 if result_url in self.ARTICLE_SET:
                     continue
 
                 self.ARTICLE_SET.add(result_url)
                 print(f'\tScraping data from {result_url}')
-                response = requests.get(result_url, headers=self.HEADERS)
                 
-                news_info = self.extract_news_info(response)
+                driver.get(result_url)
+                news_info = self.extract_news_info(driver.page_source, url)
                 
                 if (news_info is None):
                     continue
 
                 self.df.add_news('Manila Times', news_info)
 
-    def get_results(self, response: requests.Response):
-        soup = BeautifulSoup(response.text, 'html.parser')
+    def get_results(self, response):
+        soup = BeautifulSoup(response, 'html.parser')
         return soup.find('div', class_='tag-widget').find('div', class_='item-row-2').find_all('a', href=True)
     
-    def extract_news_info(self, response: requests.Response):
+    def extract_news_info(self, response, url):
         try: 
-            soup = BeautifulSoup(response.text, 'html.parser')
+            soup = BeautifulSoup(response, 'html.parser')
             article_title = soup.find('h1', class_='article-title').text
 
             article_byline = soup.find('a', class_='article-author-name').text
@@ -45,7 +60,7 @@ class ManilaTimesScraper(Scraper):
 
             article_content = [paragraph.text for paragraph in soup.find('div', 'article-body-content').find_all('p')]
 
-            article_section = response.url.split('/')[6]
+            article_section = url.split('/')[6]
             return NewsInfo(
                 article_published, 
                 article_title,
@@ -55,6 +70,8 @@ class ManilaTimesScraper(Scraper):
             )
         
         except Exception as e:
+            print("ERROR: " + str(e))
+
             with open('./log/{}.txt'.format('err'), 'a') as file:
                 file.write(str(e))
 
