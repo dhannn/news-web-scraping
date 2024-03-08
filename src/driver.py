@@ -4,9 +4,14 @@ from scraper.inquirer_scraper import InquirerScraper
 from scraper.manila_times_scraper import ManilaTimesScraper
 
 news_df = NewsDataFrame()
-scraper = ManilaTimesScraper(news_df)
-scraper.scrape()
-news_df.save()
+scrapers = [
+    ManilaTimesScraper(news_df, ['global-warming', 'climate-change']), 
+    InquirerScraper(news_df, ['global-warming', 'climate-change'])
+    ]
 
+for scraper in scrapers:
+    scraper.scrape()
+
+news_df.save()
 pdf_saver = PDFSaver(news_df.df)
 pdf_saver.save()

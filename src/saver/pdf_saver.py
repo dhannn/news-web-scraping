@@ -19,6 +19,7 @@ class PDFSaver(Saver):
     
     def __save(self, series: Series):
         ctrl_num = series.name
+        keyword = series['keyword']
         headline = series['headline']
         byline = series['byline']
         published_date = series['published_date']
@@ -31,6 +32,8 @@ class PDFSaver(Saver):
         story = []
 
         c = canvas.Canvas(filename)
+        story.append(Paragraph(f'Keyword: { keyword }'))
+        story.append(Spacer(1,0.1*inch))
         story.append(Paragraph(f'Headline: { headline }'))
         story.append(Spacer(1,0.1*inch))
         story.append(Paragraph(f'Byline: { byline }'))

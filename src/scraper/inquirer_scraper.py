@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup, ResultSet
 
 class InquirerScraper(Scraper):
-    BASE_URL = 'https://{}.inquirer.net/tag/climate-change/page/{}'
+    BASE_URL = 'https://{}.inquirer.net/tag/{}/page/{}'
     SECTIONS = [
         'newsinfo',
         'globalnation',
@@ -17,6 +17,8 @@ class InquirerScraper(Scraper):
         'sports',
         'opinion'
     ]
+
+    ARTICLE_SET = set()
 
     def get_results_from_search(self, url: str, section) -> ResultSet[any]:
         
@@ -33,14 +35,22 @@ class InquirerScraper(Scraper):
         result_url = result.find('a', href=True).get('href')
         return requests.get(result_url, headers=self.HEADERS)
     
-    def extract_news_info(self, result: requests.Response, section) -> NewsInfo:
+    def extract_news_info(self, result: requests.Response, section, keyword) -> NewsInfo:
         page = BeautifulSoup(result.text, 'html.parser')
+
+        if f'<a href="https://{section}.inquirer.net/source/philippine-daily-inquirer" rel="tag">Philippine Daily Inquirer</a>' in result.text:
+            subtype = '[PDI]'
+        elif f'<a href="https://{section}.inquirer.net/source/inquirer-net" rel="tag">INQUIRER.net</a>' in result.text or '<a href="https://www.twitter.com/@inquirerdotnet" class="art_twt">@inquirerdotnet</a>' in result.text:
+            subtype = '[NET]'
+        else:
+            subtype = '[OUT]'
 
         article_name = page.find('h1', class_='entry-title').text
         
         if (page.find('div', id='art_author') is None):
             try:
-                article_author = page.find('div', id='art_plat').find('a').text
+                article_author = page.find('div', id='art_plat').find('a').text if page.find('div', id='art_plat').find('a') is not None\
+                        else None
             except Exception as e:
                 print(e)
                 return None
@@ -57,34 +67,39 @@ class InquirerScraper(Scraper):
         article_section = section
 
         return NewsInfo(
+            keyword,
             article_published, 
             article_name, 
             article_author, 
             article_section, 
-            article_content)
+            article_content), subtype
 
     def scrape(self) -> list[NewsInfo]:
-        for section in self.SECTIONS:
-            for i in range(80):
-                url = self.BASE_URL.format(section, i + 1)
-                results = self.get_results_from_search(url, section)
+        for keyword in self.keywords:
+            for section in self.SECTIONS:
+                for i in range(80):
+                    url = self.BASE_URL.format(section, keyword, i + 1)
+                    results = self.get_results_from_search(url, section)
 
-                if results is None:
-                    break
+                    if results is None:
+                        break
 
-                print('Fetching from URL {}'.format(url))
-                
-                for i, result in enumerate(results):
-                    result_page = self.get_result_page(result)                    
-                    print(f'\tScraping data from { result_page.url }')
+                    print('Fetching from URL {}'.format(url))
+                    
+                    for i, result in enumerate(results):
+                        if result in self.ARTICLE_SET:
+                            continue
+                        result_page = self.get_result_page(result)                    
+                        print(f'\tScraping data from { result_page.url }')
 
-                    news_info = self.extract_news_info(result_page, section)
-                    self.articles.append(news_info)
+                        news_info, subtype = self.extract_news_info(result_page, section, keyword)
 
-                    if (news_info is None):
-                        with open('./log/{}.txt'.format('err'), 'a') as file:
-                            file.write(result.text)
-                        continue
+                        if (news_info is None):
+                            with open('./log/{}.txt'.format('err'), 'a') as file:
+                                file.write(f'[{ result_page.url }] { result.text }')
+                            continue
 
-                    self.df.add_news('Inquirer', news_info)
+                        self.articles.append(news_info)
+                        self.df.add_news('Inquirer', news_info, subtype)
+                        self.ARTICLE_SET.add(result)
                 
