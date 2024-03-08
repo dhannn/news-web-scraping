@@ -20,7 +20,7 @@ Inquirer and Manila Times.
 1. To scrape more news sources, create a subclass of `Scraper` 
 for the particular news source.
     - The `Scraper` class takes in a `pandas DataFrame` that stores the 
-    scraped information and a list of keywords.
+    scraped information and a list of keywords in its constructor.
 1. Override the `scrape()` method. 
     - Since different websites have different HTML structures, there is no 
     one correct way to implement the method. However, when working with 
