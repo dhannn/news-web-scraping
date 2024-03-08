@@ -49,3 +49,9 @@ byline, section and the content.
 1. For any errors, log it in the `log/err.txt` file.
 1. Go to the main `driver.py` script and add the newly-created class to 
 the `scrapers` variable.
+
+## Contact Information
+Should there be inquiries about the code or the project, contact me at
+[daniel_ramos@dlsu.edu.ph](mailto:daniel_ramos@dlsu.edu.ph). 
+Expect a reply within two days. If there is no reply within the timeframe,
+feel free to follow up.

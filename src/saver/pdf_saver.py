@@ -9,15 +9,51 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
 
 class PDFSaver(Saver):
+    
+    """
+    A Saver implementation to save news information to PDF files.
+
+    Attributes:
+        df (DataFrame): The DataFrame containing news information.
+
+    Methods:
+        __init__(self, df: DataFrame):
+            Initializes a PDFSaver object with the provided DataFrame.
+
+        save(self):
+            Saves news information to PDF files for each row in the DataFrame.
+
+        __save(self, series: Series):
+            Saves news information for a specific row to a PDF file.
+
+        laterPages(canvas, doc):
+            Callback method for customizing later pages in the PDF.
+    """
+
     def __init__(self, df: DataFrame):
+        """
+        Initializes a PDFSaver object with the provided DataFrame.
+
+        Parameters:
+            df (DataFrame): The DataFrame containing news information.
+        """
         self.df = df
     
     def save(self):
+        """
+        Saves news information to PDF files for each row in the DataFrame.
+        """
         map(PDFSaver.__save, self.df)
         for index, row in self.df.iterrows():
             self.__save(row)
     
     def __save(self, series: Series):
+        """
+        Saves news information for a specific row to a PDF file.
+
+        Parameters:
+            series (Series): The pandas Series representing a row of news information.
+        """
         ctrl_num = series.name
         keyword = series['keyword']
         headline = series['headline']
@@ -55,7 +91,16 @@ class PDFSaver(Saver):
             story.append(Spacer(1,0.2*inch))
         doc.build(story, onLaterPages=PDFSaver.laterPages)
     
+    @staticmethod
     def laterPages(canvas, doc):
+        """
+        Callback method for customizing later pages in the PDF.
+
+        Parameters:
+            canvas: The PDF canvas.
+            doc: The SimpleDocTemplate instance.
+        """
+        
         canvas.saveState()
         canvas.setFont('Times-Roman',9)
         canvas.restoreState()
