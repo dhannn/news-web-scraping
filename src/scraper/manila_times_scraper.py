@@ -1,6 +1,5 @@
 from telnetlib import EC
 from bs4 import BeautifulSoup
-import requests
 from news.news_info import NewsInfo
 from scraper.scraper import Scraper
 from selenium.webdriver.support import expected_conditions as EC
